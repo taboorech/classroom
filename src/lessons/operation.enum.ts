@@ -1,0 +1,6 @@
+export enum Operation {
+  TURN_IN = "TURN_IN",
+  UPLOAD = "UPLOAD",
+  CANCEL = "CANCEL",
+  DELETE_ELEMENTS = "DELETE_ELEMENTS"
+}
