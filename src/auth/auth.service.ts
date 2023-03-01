@@ -18,7 +18,7 @@ export class AuthService {
   ) {}
 
   async signUp(userCreateDto: UserCreateDto): Promise<User> {
-    const { email, login, password } = userCreateDto;
+    const { email, login, surname, name, password } = userCreateDto;
     if(await this.userModel.findOne({ email })) {
       throw new ConflictException(`User with this email already registered`);
     }
@@ -26,6 +26,8 @@ export class AuthService {
     const user = new this.userModel({
       email,
       login,
+      surname,
+      name,
       password: hashPassword,
     });
     

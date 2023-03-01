@@ -1,7 +1,6 @@
 import { MethodNotAllowedException, ConflictException, NotFoundException } from '@nestjs/common/exceptions';
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
-import { async } from 'rxjs';
 import { Lesson } from './lesson.schema';
 import { User } from './user.schema';
 
@@ -43,7 +42,7 @@ export class Class {
 export const ClassSchema = SchemaFactory.createForClass(Class);
 
 ClassSchema.methods.addMembers = async function (member: User) {
-  if(this.members.find((member: User) => member.toString() == member._id.toString())) {
+  if(!!this.members.find((memberRecord: User) => memberRecord._id.toString() == member._id.toString())) {
     throw new ConflictException(`You already connect to the classroom`);
   }
   const members = [...this.members];

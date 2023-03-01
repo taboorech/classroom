@@ -9,5 +9,11 @@ export class UserCreateDto {
   login: string;
 
   @IsNotEmpty()
+  surname: string;
+
+  @IsNotEmpty()
+  name: string;
+
+  @IsNotEmpty()
   password: string;
 }

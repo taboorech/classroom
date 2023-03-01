@@ -1,5 +1,5 @@
 import { Body, Req, Controller, Post, Get, Delete, UseGuards } from '@nestjs/common';
-import { Param, Patch, Put } from '@nestjs/common/decorators';
+import { Param, Patch, Put, Query } from '@nestjs/common/decorators';
 import { AuthGuard } from '@nestjs/passport';
 import { Class } from 'src/schemas/class.schema';
 import { ClassesService } from './classes.service';
@@ -8,6 +8,7 @@ import { UpdateClassDto } from './dto/update-class.dto';
 import { ClassConnectDto } from './dto/class-connect.dto';
 import { DeleteResult, UpdateResult } from 'mongodb';
 import { GradeBook } from './classes-grade-book.type';
+import { RemoveMemberDto } from './dto/remove-member.dto';
 
 @Controller('classes')
 @UseGuards(AuthGuard())
@@ -27,13 +28,13 @@ export class ClassesController {
   }
 
   @Post('/connect')
-  connectToClass(@Req() req, @Body() classConnectDto: ClassConnectDto): Promise<Class> {
+  connectToClass(@Req() req, @Query() classConnectDto: ClassConnectDto): Promise<Class> {
     return this.classesService.connectToClass(req.user, classConnectDto);
   }
 
   @Patch('/:id/removeMember')
-  removeMember(@Req() req, @Param('id') classId: string, @Body('member') memberId: string): Promise<Class> {
-    return this.classesService.removeMember(req.user, classId, memberId);
+  removeMember(@Req() req, @Param('id') classId: string, @Body() removeMemberDto: RemoveMemberDto): Promise<Class> {
+    return this.classesService.removeMember(req.user, classId, removeMemberDto);
   }
 
   @Get('/:id')

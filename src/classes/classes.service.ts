@@ -13,6 +13,7 @@ import { User, UserDocument } from 'src/schemas/user.schema';
 import { GradeBook } from './classes-grade-book.type';
 import { ClassConnectDto } from './dto/class-connect.dto';
 import { CreateClassDto } from './dto/create-class.dto';
+import { RemoveMemberDto } from './dto/remove-member.dto';
 import { UpdateClassDto } from './dto/update-class.dto';
 
 @Injectable()
@@ -37,7 +38,8 @@ export class ClassesService {
     const { accessToken } = classConnectDto;
     const classObj = await this.classModel.findOne({ accessToken });
     elementEmptyValidatation(classObj, `Class not found`);
-    if(user.classes.find((userClass) => userClass.toString() == classObj._id.toString())) {
+    
+    if(!!user.classes.find((userClass) => userClass.toString() == classObj._id.toString())) {
       throw new MethodNotAllowedException(`You are already in class`);
     }
     await classObj.addMembers(user);
@@ -45,11 +47,12 @@ export class ClassesService {
     return classObj;
   }
 
-  async removeMember(user: User, classId: string, memberId: string): Promise<Class> {
+  async removeMember(user: User, classId: string, removeMemberDto: RemoveMemberDto): Promise<Class> {
     validClassId(classId, `Wrong path`);
     const classObj = await this.classModel.findOne({ _id: classId });
     elementEmptyValidatation(classObj, `Class not found`);
-    if(!classObj.members.find((member) => member._id.toString() == memberId.toString())) {
+    const { memberId } = removeMemberDto;
+    if(!classObj.members.find((member) => member._id.toString() == memberId)) {
       throw new NotFoundException(`User not found`);
     }
     const member = await this.userModel.findOne({ _id: memberId });
@@ -92,7 +95,7 @@ export class ClassesService {
       populate: {
         path: 'attachedElements'
       }
-    }).populate('owners', '_id login').populate('members', '_id login');
+    }).populate('owners', '_id login surname name').populate('members', '_id login surname name');
     elementEmptyValidatation(classObj, `Class not found`);
     checkMember(classId, user, `You can not open this classroom`);
     
@@ -105,7 +108,7 @@ export class ClassesService {
 
   async getGradeBook(user: User, classId: string): Promise<GradeBook> {
     validClassId(classId, `Class not found`);
-    const classObj = await this.classModel.findOne({ _id: classId }).populate('lessons').populate('members');
+    const classObj = await this.classModel.findOne({ _id: classId }).populate('lessons').populate('members', '_id login surname name');
     checkOwner(classObj, user._id.toString(), `You can not open the grade book`);
     const marks = await this.marksModel.find({ class: classObj });
     return {
