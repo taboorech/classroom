@@ -106,15 +106,12 @@ export class ClassesService {
     return { classObj, owner };
   }
 
-  async getGradeBook(user: User, classId: string): Promise<GradeBook> {
+  async getGradeBook(user: User, classId: string): Promise<Marks[]> {
     validClassId(classId, `Class not found`);
     const classObj = await this.classModel.findOne({ _id: classId }).populate('lessons').populate('members', '_id login surname name');
     checkOwner(classObj, user._id.toString(), `You can not open the grade book`);
     const marks = await this.marksModel.find({ class: classObj });
-    return {
-      classObj,
-      marks
-    }
+    return marks;
   }
 
   async updateClassInfo(classId: string, user: User, updateClassDto: UpdateClassDto): Promise<UpdateResult> {

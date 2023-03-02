@@ -5,6 +5,7 @@ import { FilesInterceptor } from '@nestjs/platform-express';
 import { UpdateResult } from 'mongodb';
 import { Attachments } from 'src/schemas/attachments.schema';
 import { Lesson } from 'src/schemas/lesson.schema';
+import { Marks } from 'src/schemas/marks.schema';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { MakeAssessmentDto } from './dto/make-assessment.dto';
 import { TurnInDto, TurnInOperationDto } from './dto/turnIn.dto';
@@ -48,7 +49,7 @@ export class LessonsController {
   }
 
   @Put('/:id/:lessonId/marks')
-  addMark(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string, @Body() makeAssessmentDto: MakeAssessmentDto): Promise<void> {
+  addMark(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string, @Body() makeAssessmentDto: MakeAssessmentDto): Promise<Marks> {
     return this.lessonsService.addMark(req.user, classId, lessonId, makeAssessmentDto);
   }
 

@@ -9,6 +9,7 @@ import { ClassConnectDto } from './dto/class-connect.dto';
 import { DeleteResult, UpdateResult } from 'mongodb';
 import { GradeBook } from './classes-grade-book.type';
 import { RemoveMemberDto } from './dto/remove-member.dto';
+import { Marks } from 'src/schemas/marks.schema';
 
 @Controller('classes')
 @UseGuards(AuthGuard())
@@ -43,7 +44,7 @@ export class ClassesController {
   }
 
   @Get('/:id/gradeBook')
-  getGradeBook(@Req() req, @Param('id') classId: string): Promise<GradeBook> {
+  getGradeBook(@Req() req, @Param('id') classId: string): Promise<Marks[]> {
     return this.classesService.getGradeBook(req.user, classId);
   }
 

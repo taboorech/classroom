@@ -231,7 +231,7 @@ export class LessonsService {
     }
   }
 
-  async addMark(user: User, classId: string, lessonId: string, makeAssessmentDto: MakeAssessmentDto): Promise<void> {
+  async addMark(user: User, classId: string, lessonId: string, makeAssessmentDto: MakeAssessmentDto): Promise<Marks> {
     validLessonId(classId, lessonId, `Wrong path`);
     const { memberId, mark } = makeAssessmentDto;
     const classObj = await this.classModel.findOne({ _id: classId });
@@ -252,6 +252,7 @@ export class LessonsService {
       mark
     })
     await saveMark.save();
+    return saveMark;
   }
 
   async updateMark(user: User, classId: string, updateAssessmentDto: UpdateAssessmentDto): Promise<UpdateResult> {
