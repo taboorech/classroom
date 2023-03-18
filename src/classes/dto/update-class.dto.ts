@@ -6,5 +6,8 @@ export class UpdateClassDto {
   title: string;
 
   @IsOptional()
+  description: string;
+
+  @IsOptional()
   owners: Types.ObjectId;
 }

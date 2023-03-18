@@ -15,7 +15,7 @@ export class Lesson {
   @Prop({ required: true })
   type: string;
 
-  @Prop()
+  @Prop({ default: 12 })
   maxMark: number;
 
   @Prop([{ originalname: { type: String }, type: { type: String }, path: { type: String } }])

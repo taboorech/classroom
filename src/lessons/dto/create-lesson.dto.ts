@@ -14,6 +14,9 @@ export class CreateLessonDto {
   type: LessonType;
 
   @IsOptional()
+  maxMark: number;
+
+  @IsOptional()
   attachedElements: string[];
 
   @IsOptional()

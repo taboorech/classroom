@@ -71,7 +71,7 @@ export class LessonsService {
       type: 'file',
       path: file.path
     }));
-    const { title, description, attachedElements, type, expires } = createLessonDto;
+    const { title, description, maxMark, attachedElements, type, expires } = createLessonDto;
     attachedElements.map((attachedElement) => savedElements.push({
       originalname: null,
       type: 'path',
@@ -81,6 +81,7 @@ export class LessonsService {
       title,
       description,
       type,
+      maxMark,
       attachedElements: savedElements,
       expires
     })

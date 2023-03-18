@@ -8,6 +8,7 @@ import { checkOwner } from 'src/middleware/check-owner';
 import { elementEmptyValidatation } from 'src/middleware/element-empty';
 import { validClassId } from 'src/middleware/valid-classId';
 import { Class, ClassDocument } from 'src/schemas/class.schema';
+import { Lesson, LessonDocument } from 'src/schemas/lesson.schema';
 import { Marks, MarksDocument } from 'src/schemas/marks.schema';
 import { User, UserDocument } from 'src/schemas/user.schema';
 import { GradeBook } from './classes-grade-book.type';
@@ -116,11 +117,11 @@ export class ClassesService {
 
   async updateClassInfo(classId: string, user: User, updateClassDto: UpdateClassDto): Promise<UpdateResult> {
     validClassId(classId, `Wrong path`);
-    const { title } = updateClassDto;
+    const { title, description } = updateClassDto;
     const classObj = await this.classModel.findOne({_id: classId});
     elementEmptyValidatation(classObj, `Class not found`);
     checkOwner(classObj, user._id.toString(), `You can not update class info`);
-    return await this.classModel.updateOne({ _id: classId }, {title});
+    return await this.classModel.updateOne({ _id: classId }, {title, description});
   }
 
   async addOwner(classId: string, user: User, updateClassDto: UpdateClassDto): Promise<Class> {
