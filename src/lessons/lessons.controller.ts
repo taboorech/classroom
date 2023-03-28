@@ -59,7 +59,7 @@ export class LessonsController {
   }
 
   @Post('/:id/:lessonId/turnIn')
-  turnIn(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string, @UploadedFiles() files: Array<Express.Multer.File>, @Query() turnInOperationDto: TurnInOperationDto, @Body() turnInDto: TurnInDto): Promise<UpdateResult> {
+  turnIn(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string, @UploadedFiles() files: Array<Express.Multer.File>, @Query() turnInOperationDto: TurnInOperationDto, @Body() turnInDto: TurnInDto): Promise<Attachments> {
     return this.lessonsService.turnIn(req.user, classId, lessonId, files, turnInOperationDto, turnInDto);
   }
 

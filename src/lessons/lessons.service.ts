@@ -155,7 +155,7 @@ export class LessonsService {
     return lesson;
   }
 
-  async turnIn(user: User, classId: string, lessonId: string, files: Array<Express.Multer.File>, turnInOperationDto: TurnInOperationDto, turnInDto: TurnInDto): Promise<UpdateResult> {
+  async turnIn(user: User, classId: string, lessonId: string, files: Array<Express.Multer.File>, turnInOperationDto: TurnInOperationDto, turnInDto: TurnInDto): Promise<Attachments> {
     if(!mongoose.Types.ObjectId.isValid(lessonId)) {
       throw new BadRequestException(`Wrong path`);
     }
@@ -167,26 +167,32 @@ export class LessonsService {
       return;
     }
     elementEmptyValidatation(lesson, `Lesson not found`);
+
     let savedElements = [];
-    files.map((file) => savedElements.push({
-      originalname: file.originalname,
-      type: 'file',
-      path: file.path
-    }));
+    if(files && files.length > 0) {
+      files.map((file) => savedElements.push({
+        originalname: file.originalname,
+        type: 'file',
+        path: file.path
+      }));
+    }
     
-    attachedElements.map((attachedElement) => savedElements.push({
-      originalname: null,
-      type: 'path',
-      path: attachedElement
-    }));
+    if(attachedElements) {
+      const newOriginalname = new URL(attachedElements).hostname;
+      savedElements.push({
+        originalname: newOriginalname,
+        type: 'path',
+        path: attachedElements
+      })
+    }
     const turnInDocument = await this.AttachmentsModel.findOne({ user, lesson });
     switch(operation) {
       case 'UPLOAD':
-        if(turnInDocument.turnIn) {
+        if(turnInDocument && turnInDocument.turnIn) {
           throw new MethodNotAllowedException(`You can not add new elements`);
         }
         if(!turnInDocument) {
-          await new this.AttachmentsModel({
+          return await new this.AttachmentsModel({
             user,
             lesson,
             turnIn: false,
@@ -195,20 +201,20 @@ export class LessonsService {
         } else {
           const files = turnInDocument.files;
           files.map((file) => savedElements.push(file));
-          return await this.AttachmentsModel.updateOne({ user, lesson }, {
+          return await this.AttachmentsModel.findOneAndUpdate({ user, lesson }, {
             files: savedElements
-          })
+          }, { new: true })
         }
         break;
       case 'TURN_IN':
-        return await this.AttachmentsModel.updateOne({ user, lesson }, {
+        return await this.AttachmentsModel.findOneAndUpdate({ user, lesson }, {
           turnIn: true
-        })
+        }, { new: true })
         break;
       case 'CANCEL':
-        return await this.AttachmentsModel.updateOne({ user, lesson }, {
+        return await this.AttachmentsModel.findOneAndUpdate({ user, lesson }, {
           turnIn: false
-        })
+        }, { new: true })
         break;
       case 'DELETE_ELEMENTS':
         if(turnInDocument.turnIn) {
@@ -227,7 +233,7 @@ export class LessonsService {
             }
           }
         }
-        return await this.AttachmentsModel.updateOne({ user, lesson }, { files });
+        return await this.AttachmentsModel.findOneAndUpdate({ user, lesson }, { files }, { new: true });
         break;
     }
   }

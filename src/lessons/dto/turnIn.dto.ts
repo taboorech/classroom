@@ -3,8 +3,7 @@ import { Operation } from "../operation.enum";
 
 export class TurnInDto {
   @IsOptional()
-  @IsArray()
-  attachedElements: string[];
+  attachedElements: string;
 }
 
 export class TurnInOperationDto {
