@@ -14,6 +14,7 @@ import { UpdateLessonDto } from './dto/update-lesson.dto';
 import { GetWorks } from './lesson-get-works.type';
 import { LessonGetRequest } from './lesson-getRequest.type';
 import { LessonsService } from './lessons.service';
+import { ReturnWorkDto } from './dto/return-word.dto';
 
 @UseGuards(AuthGuard())
 @Controller('classes')
@@ -61,6 +62,11 @@ export class LessonsController {
   @Post('/:id/:lessonId/turnIn')
   turnIn(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string, @UploadedFiles() files: Array<Express.Multer.File>, @Query() turnInOperationDto: TurnInOperationDto, @Body() turnInDto: TurnInDto): Promise<Attachments> {
     return this.lessonsService.turnIn(req.user, classId, lessonId, files, turnInOperationDto, turnInDto);
+  }
+
+  @Patch('/:id/:lessonId/return')
+  returnWork(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string, @Body() returnWorkDto: ReturnWorkDto) {
+    return this.lessonsService.returnWork(req.user, classId, lessonId, returnWorkDto);
   }
 
 }

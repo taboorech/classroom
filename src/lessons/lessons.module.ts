@@ -29,7 +29,7 @@ import { Attachments, AttachmentsSchema } from 'src/schemas/attachments.schema';
               return cb(null, './upload');
             },
             filename: (req, file, cb) => {
-              return cb(null, `${Date.now()}-${file.originalname}`);
+              return cb(null, `${Date.now()}-${Buffer.from(file.originalname, 'latin1').toString('utf8')}`);
             }
           })
         }

@@ -15,7 +15,7 @@ export class Attachments {
   @Prop({ required: true })
   turnIn: boolean;
   @Prop([{ originalname: { type: String }, type: {type: String}, path: { type: String } }])
-  files: { originalname: string, type: string, path: string }[];
+  files: { originalname: string, type: string, path: string, _id: Types.ObjectId }[];
 }
 
 export const AttachmentsSchema = SchemaFactory.createForClass(Attachments);

@@ -20,6 +20,8 @@ import { UpdateAssessmentDto } from './dto/update-assessment';
 import { Attachments, AttachmentsDocument } from 'src/schemas/attachments.schema';
 import { TurnInDto, TurnInOperationDto } from './dto/turnIn.dto';
 import { GetWorks } from './lesson-get-works.type';
+import { encode } from 'punycode';
+import { ReturnWorkDto } from './dto/return-word.dto';
 
 @Injectable()
 export class LessonsService {
@@ -47,17 +49,29 @@ export class LessonsService {
 
   async checkWorks(user: User, classId: string, lessonId: string): Promise<GetWorks> {
     validLessonId(classId, lessonId, `Wrong path`);
-    checkMember(classId, user, `You can not check works`);
+    const classObj = await this.classModel.findOne({ _id: classId }).populate('members', '_id surname name');
+    checkOwner(classObj, user._id.toString(), `You can not check works`);
     const lesson = await this.lessonModel.findOne({ _id: lessonId });
     elementEmptyValidatation(lesson, `Lesson not found`);
     const marks = await this.marksModel.find({ lesson });
     const works = await this.AttachmentsModel.find({ lesson }).populate('user');
 
     return {
+      members: classObj.members,
       lesson,
       marks,
       works
     };
+  }
+
+  async returnWork(user: User, classId: string, lessonId: string, returnWorkDto: ReturnWorkDto): Promise<UpdateResult> {
+    validLessonId(classId, lessonId, `Wrong path`);
+    const classObj = await this.classModel.findOne({ _id: classId });
+    checkOwner(classObj, user._id.toString(), `You can not return the work`);
+    const lesson = await this.lessonModel.findOne({ _id: lessonId });
+    const { memberId } = returnWorkDto;
+    await this.marksModel.findOneAndRemove({ member: memberId, lesson });
+    return await this.AttachmentsModel.findOneAndUpdate({ lesson, member: memberId }, { turnIn: false });
   }
 
   async createLesson(userId: string, classId: string, files: Array<Express.Multer.File>, createLessonDto: CreateLessonDto): Promise<Lesson> {
@@ -65,12 +79,18 @@ export class LessonsService {
     const classObj = await this.classModel.findOne({ _id: classId });
     elementEmptyValidatation(classObj, `Class not found`);
     checkOwner(classObj, userId, `You can not add a lesson`);
+    
     let savedElements = [];
-    files.map((file) => savedElements.push({
-      originalname: file.originalname,
-      type: 'file',
-      path: file.path
-    }));
+    if(files && files.length > 0) {
+      files.map((file) => {
+        const newOriginalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        savedElements.push({
+          originalname: newOriginalname,
+          type: 'file',
+          path: file.path
+        })
+      });
+    }
     const { title, description, maxMark, attachedElements, type, expires } = createLessonDto;
     attachedElements.map((attachedElement) => savedElements.push({
       originalname: null,
@@ -131,10 +151,16 @@ export class LessonsService {
     checkOwner(classObj, userId, `You can not remove the lesson`);
 
     const savedElements = [];
-    files.map((file) => savedElements.push({
-      originalname: file.originalname,
-      path: file.path
-    }));
+    if(files && files.length > 0) {
+      files.map((file) => {
+        const newOriginalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        savedElements.push({
+          originalname: newOriginalname,
+          type: 'file',
+          path: file.path
+        })
+      });
+    }
     const { title, description, type, attachedElements, expires } = updateLessonDto;    
     attachedElements.map((attachedElement) => savedElements.push({
       originalname: null,
@@ -170,24 +196,27 @@ export class LessonsService {
 
     let savedElements = [];
     if(files && files.length > 0) {
-      files.map((file) => savedElements.push({
-        originalname: file.originalname,
-        type: 'file',
-        path: file.path
-      }));
+      files.map((file) => {
+        const newOriginalname = Buffer.from(file.originalname, 'latin1').toString('utf8');
+        savedElements.push({
+          originalname: newOriginalname,
+          type: 'file',
+          path: file.path
+        })
+      });
     }
     
-    if(attachedElements) {
-      const newOriginalname = new URL(attachedElements).hostname;
-      savedElements.push({
-        originalname: newOriginalname,
-        type: 'path',
-        path: attachedElements
-      })
-    }
     const turnInDocument = await this.AttachmentsModel.findOne({ user, lesson });
     switch(operation) {
       case 'UPLOAD':
+        if(attachedElements) {
+          const newOriginalname = new URL(attachedElements).hostname;
+          savedElements.push({
+            originalname: newOriginalname,
+            type: 'path',
+            path: attachedElements
+          })
+        }
         if(turnInDocument && turnInDocument.turnIn) {
           throw new MethodNotAllowedException(`You can not add new elements`);
         }
@@ -218,19 +247,18 @@ export class LessonsService {
         break;
       case 'DELETE_ELEMENTS':
         if(turnInDocument.turnIn) {
-          throw new MethodNotAllowedException(`You can not add new elements`);
+          throw new MethodNotAllowedException(`You can not remove elements`);
         }
         let files = turnInDocument.files;
         for(let i: number = 0; i < files.length; i++) {
-          for(let j: number = 0; j < attachedElements.length; j++) {
-            if(files[i].path == attachedElements[j]) {
-              if(files[i].type == 'file') {
-                unlink(files[i].path, (err) => {
-                  console.log(err);
-                });
-              }
-              files.splice(i, 1);
+          if(files[i]._id.toString() == attachedElements.toString()) {
+            if(files[i].type == 'file') {
+              unlink(files[i].path, (err) => {
+                if(err)
+                  throw new BadRequestException(`${err}`);
+              });
             }
+            files.splice(i, 1);
           }
         }
         return await this.AttachmentsModel.findOneAndUpdate({ user, lesson }, { files }, { new: true });
@@ -252,6 +280,7 @@ export class LessonsService {
     if(await this.marksModel.findOne({ user: member, lesson })) {
       throw new BadRequestException(`Evaluation is already`);
     }
+    await this.AttachmentsModel.findOneAndUpdate({ user: member, lesson }, { turnIn: false });
     const saveMark = new this.marksModel({
       user: member,
       lesson,
