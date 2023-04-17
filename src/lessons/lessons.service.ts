@@ -70,8 +70,8 @@ export class LessonsService {
     checkOwner(classObj, user._id.toString(), `You can not return the work`);
     const lesson = await this.lessonModel.findOne({ _id: lessonId });
     const { memberId } = returnWorkDto;
-    await this.marksModel.findOneAndRemove({ member: memberId, lesson });
-    return await this.AttachmentsModel.findOneAndUpdate({ lesson, member: memberId }, { turnIn: false });
+    await this.marksModel.findOneAndDelete({ user: memberId, lesson });
+    return await this.AttachmentsModel.findOneAndUpdate({ lesson, user: memberId }, { turnIn: false });
   }
 
   async createLesson(userId: string, classId: string, files: Array<Express.Multer.File>, createLessonDto: CreateLessonDto): Promise<Lesson> {
@@ -92,11 +92,15 @@ export class LessonsService {
       });
     }
     const { title, description, maxMark, attachedElements, type, expires } = createLessonDto;
-    attachedElements.map((attachedElement) => savedElements.push({
-      originalname: null,
-      type: 'path',
-      path: attachedElement
-    }));
+    
+    attachedElements.map((attachedElement) => {
+      const newOriginalname = new URL(attachedElement).hostname;
+      savedElements.push({
+        originalname: newOriginalname,
+        type: 'path',
+        path: attachedElement
+      })
+    });
     const lesson = new this.lessonModel({
       title,
       description,
@@ -162,11 +166,14 @@ export class LessonsService {
       });
     }
     const { title, description, type, attachedElements, expires } = updateLessonDto;    
-    attachedElements.map((attachedElement) => savedElements.push({
-      originalname: null,
-      type: 'path',
-      path: attachedElement
-    }));
+    attachedElements.map((attachedElement) => {
+      const newOriginalname = new URL(attachedElement).hostname;
+      savedElements.push({
+        originalname: newOriginalname,
+        type: 'path',
+        path: attachedElement
+      })
+    });
 
     const lesson = await this.lessonModel.updateOne({ _id: lessonId }, {
       title,
