@@ -29,6 +29,11 @@ export class LessonsController {
     return this.lessonsService.getLesson(req.user, classId, lessonId);
   }
 
+  @Get('/:id/:lessonId/getLessonSettings')
+  getLessonSetting(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string) {
+    return this.lessonsService.getLessonSettings(req.user, classId, lessonId);
+  }
+
   @Get('/:id/:lessonId/works')
   checkWorks(@Req() req, @Param('id') classId: string, @Param('lessonId') lessonId: string): Promise<GetWorks> {
     return this.lessonsService.checkWorks(req.user, classId, lessonId);

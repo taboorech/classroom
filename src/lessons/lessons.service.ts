@@ -47,6 +47,14 @@ export class LessonsService {
     };
   }
 
+  async getLessonSettings(user: User, classId: string, lessonId: string): Promise<Lesson> {
+    validLessonId(classId, lessonId, `Wrong path`);
+    const classObj = await this.classModel.findOne({ _id: classId });
+    checkOwner(classObj, user._id.toString(), `You can not see the lesson`);
+    const lesson = await this.lessonModel.findOne({ _id: lessonId });
+    return lesson;
+  }
+
   async checkWorks(user: User, classId: string, lessonId: string): Promise<GetWorks> {
     validLessonId(classId, lessonId, `Wrong path`);
     const classObj = await this.classModel.findOne({ _id: classId }).populate('members', '_id surname name');
