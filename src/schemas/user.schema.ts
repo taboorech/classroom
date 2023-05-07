@@ -1,4 +1,4 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory, raw } from '@nestjs/mongoose';
 import mongoose, { HydratedDocument, Types } from 'mongoose';
 import { Class } from './class.schema';
 
@@ -29,9 +29,22 @@ export class User {
   @Prop({type: [{type: mongoose.Schema.Types.ObjectId, ref: 'Class'}]})
   classes: Class[];
 
+  @Prop(raw({student: [{
+    _id: { type: Types.ObjectId },
+    class: { type: mongoose.Schema.Types.ObjectId },
+    message: { type: String }
+  }], teacher: [{
+    _id: { type: Types.ObjectId },
+    class: { type: mongoose.Schema.Types.ObjectId },
+    message: { type: String }
+  }] }))
+  notifications: Object;
+
   addClass: Function;
 
   removeClass: Function;
+
+  addStudentNotification: Function;
 
 }
 
@@ -48,6 +61,16 @@ UserSchema.methods.removeClass = async function (classId: Types.ObjectId): Promi
   let classes = [...this.classes];
   classes = classes.filter(({_id}) => _id.toString() !== classId.toString());
   this.classes = classes;
+  return await this.save();
+}
+
+UserSchema.methods.addStudentNotification = async function (classId: Types.ObjectId, notification: string): Promise<User> {
+  const notifications = [...this.notifications.student];
+  notifications.push({
+    class: classId,
+    message: notification
+  })
+  this.notifications = notifications;
   return await this.save();
 }
 

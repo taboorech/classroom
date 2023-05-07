@@ -101,14 +101,16 @@ export class LessonsService {
     }
     const { title, description, maxMark, attachedElements, type, expires } = createLessonDto;
     
-    attachedElements.map((attachedElement) => {
-      const newOriginalname = new URL(attachedElement).hostname;
-      savedElements.push({
-        originalname: newOriginalname,
-        type: 'path',
-        path: attachedElement
-      })
-    });
+    if(attachedElements && attachedElements.length > 0) {
+      attachedElements.map((attachedElement) => {
+        const newOriginalname = new URL(attachedElement).hostname;
+        savedElements.push({
+          originalname: newOriginalname,
+          type: 'path',
+          path: attachedElement
+        })
+      });
+    }
     const lesson = new this.lessonModel({
       title,
       description,
@@ -118,6 +120,9 @@ export class LessonsService {
       expires
     })
     await classObj.addLessons(lesson);
+    classObj.members.map(async (member) => {
+      await member.addStudentNotification(classObj._id, `New lesson`);
+    })
     return await lesson.save();
   }
 
