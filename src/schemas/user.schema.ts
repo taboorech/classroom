@@ -32,10 +32,12 @@ export class User {
   @Prop(raw({student: [{
     _id: { type: Types.ObjectId },
     class: { type: mongoose.Schema.Types.ObjectId },
+    lesson: { type: mongoose.Schema.Types.ObjectId },
     message: { type: String }
   }], teacher: [{
     _id: { type: Types.ObjectId },
     class: { type: mongoose.Schema.Types.ObjectId },
+    lesson: { type: mongoose.Schema.Types.ObjectId },
     message: { type: String }
   }] }))
   notifications: Object;
@@ -45,6 +47,8 @@ export class User {
   removeClass: Function;
 
   addStudentNotification: Function;
+
+  addTeacherNotification: Function;
 
 }
 
@@ -64,13 +68,39 @@ UserSchema.methods.removeClass = async function (classId: Types.ObjectId): Promi
   return await this.save();
 }
 
-UserSchema.methods.addStudentNotification = async function (classId: Types.ObjectId, notification: string): Promise<User> {
+UserSchema.methods.addStudentNotification = async function (classId: Types.ObjectId, lessonId: Types.ObjectId, notification: string): Promise<User> {
   const notifications = [...this.notifications.student];
   notifications.push({
     class: classId,
+    lesson: lessonId,
     message: notification
   })
-  this.notifications = notifications;
+  this.notifications.student = notifications;
+  return await this.save();
+}
+
+UserSchema.methods.deleteStudentNotification = async function (classId: Types.ObjectId): Promise<User> {
+  let notifications = [...this.notifications.student];
+  notifications = notifications.filter(({classObj}) => classObj.toString() !== classId.toString());
+  this.notifications.student = notifications;
+  return await this.save();
+}
+
+UserSchema.methods.addTeacherNotification = async function (classId: Types.ObjectId, lessonId: Types.ObjectId, notification: string): Promise<User> {
+  const notifications = [...this.notifications.teacher];
+  notifications.push({
+    class: classId,
+    lesson: lessonId,
+    message: notification
+  })
+  this.notifications.teacher = notifications;
+  return await this.save();
+}
+
+UserSchema.methods.deleteTeacherNotification = async function (classId: Types.ObjectId): Promise<User> {
+  let notifications = [...this.notifications.teacher];
+  notifications = notifications.filter(({classObj}) => classObj.toString() !== classId.toString());
+  this.notifications.teacher = notifications;
   return await this.save();
 }
 

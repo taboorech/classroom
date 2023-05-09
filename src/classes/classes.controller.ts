@@ -19,7 +19,7 @@ export class ClassesController {
   ) {}
 
   @Get('/')
-  getClasses(@Req() req): Promise<Class[]> {
+  getClasses(@Req() req): Promise<{ classes: Class[], notifications: Object }> {
     return this.classesService.getClasses(req.user);
   }
 

@@ -25,14 +25,15 @@ export class ClassesService {
     @InjectModel(Marks.name) private marksModel: Model<MarksDocument>
   ) {} 
 
-  async getClasses(user: User): Promise<Class[]> {
-    const classes = await this.userModel.findOne({_id: user._id}).populate({
+  async getClasses(user: User): Promise<{ classes: Class[], notifications: Object }> {
+    const userObj = await this.userModel.findOne({_id: user._id}).populate({
       path: 'classes',
       populate: {
         path: 'lessons'
       }
     });
-    return classes.classes;
+    
+    return {classes: userObj.classes, notifications: userObj.notifications};
   }
 
   async connectToClass(user: User, classConnectDto: ClassConnectDto): Promise<Class> {

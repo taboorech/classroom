@@ -84,7 +84,7 @@ export class LessonsService {
 
   async createLesson(userId: string, classId: string, files: Array<Express.Multer.File>, createLessonDto: CreateLessonDto): Promise<Lesson> {
     validClassId(classId, `Wrong path`);
-    const classObj = await this.classModel.findOne({ _id: classId });
+    const classObj = await this.classModel.findOne({ _id: classId }).populate('members', 'notifications');
     elementEmptyValidatation(classObj, `Class not found`);
     checkOwner(classObj, userId, `You can not add a lesson`);
     
@@ -121,7 +121,7 @@ export class LessonsService {
     })
     await classObj.addLessons(lesson);
     classObj.members.map(async (member) => {
-      await member.addStudentNotification(classObj._id, `New lesson`);
+      await member.addStudentNotification(classObj._id, lesson._id, `New lesson`);
     })
     return await lesson.save();
   }
@@ -212,6 +212,8 @@ export class LessonsService {
     if(lesson.type != 'EXERCISE') {
       return;
     }
+    const classObj = await this.classModel.findOne({ _id: classId }).populate('owners', 'notifications');
+    elementEmptyValidatation(classObj, `Class not found`);
     elementEmptyValidatation(lesson, `Lesson not found`);
 
     let savedElements = [];
@@ -256,6 +258,9 @@ export class LessonsService {
         }
         break;
       case 'TURN_IN':
+        classObj.owners.map(async (owner) => {
+          await owner.addTeacherNotification(classObj._id, lesson._id, `Turn in`);
+        })
         return await this.AttachmentsModel.findOneAndUpdate({ user, lesson }, {
           turnIn: true
         }, { new: true })
@@ -289,7 +294,7 @@ export class LessonsService {
   async addMark(user: User, classId: string, lessonId: string, makeAssessmentDto: MakeAssessmentDto): Promise<Marks> {
     validLessonId(classId, lessonId, `Wrong path`);
     const { memberId, mark } = makeAssessmentDto;
-    const classObj = await this.classModel.findOne({ _id: classId });
+    const classObj = await this.classModel.findOne({ _id: classId }).populate('members', '_id surname name notifications');
     elementEmptyValidatation(classObj, `Class not found`);
     checkOwner(classObj, user._id.toString(), `You can not make an assessment`);
     const lesson = await this.lessonModel.findOne({ _id: lessonId });
@@ -307,16 +312,23 @@ export class LessonsService {
       class: classObj,
       mark
     })
+    classObj.members.map(async (member) => {
+      await member.addStudentNotification(classObj._id, lesson._id, `New mark`);
+    })
     await saveMark.save();
     return saveMark;
   }
 
-  async updateMark(user: User, classId: string, updateAssessmentDto: UpdateAssessmentDto): Promise<UpdateResult> {
+  async updateMark(user: User, classId: string, updateAssessmentDto: UpdateAssessmentDto): Promise<Marks> {
     validClassId(classId, `Wrong path`);
-    const classObj = await this.classModel.findOne({ _id: classId });
+    const classObj = await this.classModel.findOne({ _id: classId }).populate('members', 'notifications');
     elementEmptyValidatation(classObj, `Class not found`);
     checkOwner(classObj, user._id.toString(), `You can not update an assessment`);
     const { markId, mark } = updateAssessmentDto;
-    return await this.marksModel.updateOne({ _id: markId }, { mark });
+    const saveMark = await this.marksModel.findOneAndUpdate({ _id: markId }, { mark });
+    classObj.members.map(async (member) => {
+      await member.addStudentNotification(classObj._id, saveMark.lesson, `Mark update`);
+    })
+    return saveMark;
   }
 }

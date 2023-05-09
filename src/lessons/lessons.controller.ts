@@ -60,7 +60,7 @@ export class LessonsController {
   }
 
   @Patch('/:id/:lessonId/marks')
-  updateMark(@Req() req, @Param('id') classId: string, @Body() updateAssessmentDto: UpdateAssessmentDto): Promise<UpdateResult> {
+  updateMark(@Req() req, @Param('id') classId: string, @Body() updateAssessmentDto: UpdateAssessmentDto): Promise<Marks> {
     return this.lessonsService.updateMark(req.user, classId, updateAssessmentDto);
   }
 
