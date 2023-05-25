@@ -30,12 +30,10 @@ export class User {
   classes: Class[];
 
   @Prop(raw({student: [{
-    _id: { type: Types.ObjectId },
     class: { type: mongoose.Schema.Types.ObjectId },
     lesson: { type: mongoose.Schema.Types.ObjectId },
     message: { type: String }
   }], teacher: [{
-    _id: { type: Types.ObjectId },
     class: { type: mongoose.Schema.Types.ObjectId },
     lesson: { type: mongoose.Schema.Types.ObjectId },
     message: { type: String }
@@ -50,6 +48,9 @@ export class User {
 
   addTeacherNotification: Function;
 
+  deleteStudentNotification: Function;
+
+  deleteTeacherNotification: Function;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);
@@ -79,9 +80,9 @@ UserSchema.methods.addStudentNotification = async function (classId: Types.Objec
   return await this.save();
 }
 
-UserSchema.methods.deleteStudentNotification = async function (classId: Types.ObjectId): Promise<User> {
+UserSchema.methods.deleteStudentNotification = async function (notificationId: string): Promise<User> {
   let notifications = [...this.notifications.student];
-  notifications = notifications.filter(({classObj}) => classObj.toString() !== classId.toString());
+  notifications = notifications.filter(({_id}) => _id.toString() !== notificationId.toString());
   this.notifications.student = notifications;
   return await this.save();
 }
@@ -97,9 +98,9 @@ UserSchema.methods.addTeacherNotification = async function (classId: Types.Objec
   return await this.save();
 }
 
-UserSchema.methods.deleteTeacherNotification = async function (classId: Types.ObjectId): Promise<User> {
+UserSchema.methods.deleteTeacherNotification = async function (notificationId: string): Promise<User> {
   let notifications = [...this.notifications.teacher];
-  notifications = notifications.filter(({classObj}) => classObj.toString() !== classId.toString());
+  notifications = notifications.filter(({_id}) => _id.toString() !== notificationId.toString());
   this.notifications.teacher = notifications;
   return await this.save();
 }

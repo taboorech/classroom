@@ -8,6 +8,8 @@ import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt/dist';
 import { JwtPayload } from './jwt-payload.interface';
 import { ConfigService } from '@nestjs/config';
+import { NotificationDeleteDto } from './dto/notification-delete.dto';
+import { NotificationType } from './notification-type.enum';
 
 @Injectable()
 export class AuthService {
@@ -104,6 +106,17 @@ export class AuthService {
       }
     );
     return { accessToken, refreshToken };
+  }
+
+  async deleteNotifications(user: User, notificationDeleteDto: NotificationDeleteDto) {
+    const { notificationId, type } = notificationDeleteDto;
+    
+    if(type == NotificationType.STUDENT) {
+      // return notificationsIds.map((id) => user.deleteStudentNotification(id));
+      return user.deleteStudentNotification(notificationId);
+    }
+    // return notificationsIds.map((id) => user.deleteTeacherNotification(id));
+    return user.deleteTeacherNotification(notificationId).notifications;
   }
 
 }
